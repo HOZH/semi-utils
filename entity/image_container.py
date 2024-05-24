@@ -17,6 +17,8 @@ from utils import extract_gps_info
 from utils import extract_gps_lat_and_long
 from utils import get_exif
 
+from pprint import pprint
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,6 +26,7 @@ class ExifId(Enum):
     CAMERA_MODEL = 'CameraModelName'
     CAMERA_MAKE = 'Make'
     LENS_MODEL = ['LensModel', 'Lens']
+    LENS_MODEL_SUB = ['LensType', 'Lens']
     LENS_MAKE = 'LensMake'
     DATETIME = 'DateTimeOriginal'
     FOCAL_LENGTH = 'FocalLength'
@@ -44,7 +47,8 @@ def get_datetime(exif) -> datetime:
         dt = parser.parse(extract_attribute(exif, ExifId.DATETIME.value,
                                             default_value=str(datetime.now())))
     except ValueError as e:
-        logger.info(f'Error: 时间格式错误：{extract_attribute(exif, ExifId.DATETIME.value)}')
+        logger.info(
+            f'Error: 时间格式错误：{extract_attribute(exif, ExifId.DATETIME.value)}')
     return dt
 
 
@@ -53,7 +57,8 @@ def get_focal_length(exif):
     focal_length_in_35mm_film = DEFAULT_VALUE
 
     try:
-        focal_lengths = PATTERN.findall(extract_attribute(exif, ExifId.FOCAL_LENGTH.value))
+        focal_lengths = PATTERN.findall(
+            extract_attribute(exif, ExifId.FOCAL_LENGTH.value))
         try:
             focal_length = focal_lengths[0] if focal_length else DEFAULT_VALUE
         except IndexError as e:
@@ -64,7 +69,8 @@ def get_focal_length(exif):
         except IndexError as e:
             logger.info(f'ValueError: 不存在 35mm 焦距：{focal_lengths} : {e}')
     except Exception as e:
-        logger.info(f'KeyError: 焦距转换错误：{extract_attribute(exif, ExifId.FOCAL_LENGTH.value)} : {e}')
+        logger.info(
+            f'KeyError: 焦距转换错误：{extract_attribute(exif, ExifId.FOCAL_LENGTH.value)} : {e}')
 
     return focal_length, focal_length_in_35mm_film
 
@@ -81,16 +87,29 @@ class ImageContainer(object):
 
         self._param_dict = dict()
 
-        self.model: str = extract_attribute(self.exif, ExifId.CAMERA_MODEL.value)
+        self.model: str = extract_attribute(
+            self.exif, ExifId.CAMERA_MODEL.value)
         self.make: str = extract_attribute(self.exif, ExifId.CAMERA_MAKE.value)
-        self.lens_model: str = extract_attribute(self.exif, *ExifId.LENS_MODEL.value)
-        self.lens_make: str = extract_attribute(self.exif, ExifId.LENS_MAKE.value)
+        self.lens_model: str = extract_attribute(
+            self.exif, *ExifId.LENS_MODEL.value)
+        print(self.lens_model)
+        print(self.lens_model == '')
+
+        if self.lens_model is None or self.lens_model == '':
+            self.lens_model: str = extract_attribute(
+                self.exif, *ExifId.LENS_MODEL_SUB.value)
+
+        self.lens_make: str = extract_attribute(
+            self.exif, ExifId.LENS_MAKE.value)
         self.date: datetime = get_datetime(self.exif)
-        self.focal_length, self.focal_length_in_35mm_film = get_focal_length(self.exif)
-        self.f_number: str = extract_attribute(self.exif, ExifId.F_NUMBER.value, default_value=DEFAULT_VALUE)
+        self.focal_length, self.focal_length_in_35mm_film = get_focal_length(
+            self.exif)
+        self.f_number: str = extract_attribute(
+            self.exif, ExifId.F_NUMBER.value, default_value=DEFAULT_VALUE)
         self.exposure_time: str = extract_attribute(self.exif, ExifId.EXPOSURE_TIME.value, default_value=DEFAULT_VALUE,
                                                     suffix='s')
-        self.iso: str = extract_attribute(self.exif, ExifId.ISO.value, default_value=DEFAULT_VALUE)
+        self.iso: str = extract_attribute(
+            self.exif, ExifId.ISO.value, default_value=DEFAULT_VALUE)
 
         # 是否使用等效焦距
         self.use_equivalent_focal_length: bool = False
@@ -123,11 +142,13 @@ class ImageContainer(object):
         self._param_dict[LENS_VALUE] = self.lens_model
         filename_without_ext = os.path.splitext(self.path.name)[0]
         self._param_dict[FILENAME_VALUE] = filename_without_ext
-        self._param_dict[TOTAL_PIXEL_VALUE] = calculate_pixel_count(self.original_width, self.original_height)
+        self._param_dict[TOTAL_PIXEL_VALUE] = calculate_pixel_count(
+            self.original_width, self.original_height)
 
         # GPS 信息
         if 'GPSPosition' in self.exif:
-            self._param_dict[GEO_INFO_VALUE] = str.join(' ', extract_gps_info(self.exif.get('GPSPosition')))
+            self._param_dict[GEO_INFO_VALUE] = str.join(
+                ' ', extract_gps_info(self.exif.get('GPSPosition')))
         elif 'GPSLatitude' in self.exif and 'GPSLongitude' in self.exif:
             self._param_dict[GEO_INFO_VALUE] = str.join(' ', extract_gps_lat_and_long((self.exif.get('GPSLatitude'),
                                                                                        self.exif.get('GPSLongitude'))))
@@ -144,6 +165,10 @@ class ImageContainer(object):
             [self._param_dict[DATE_VALUE], self._param_dict[FILENAME_VALUE]])
         self._param_dict[DATETIME_FILENAME_VALUE] = ' '.join(
             [self._param_dict[DATETIME_VALUE], self._param_dict[FILENAME_VALUE]])
+
+        print(123)
+        # print(self)
+        # pprint(vars(self))
 
     def get_height(self):
         return self.get_watermark_img().height
@@ -244,11 +269,14 @@ class ImageContainer(object):
         if self.orientation == "Rotate 0":
             pass
         elif self.orientation == "Rotate 90 CW":
-            self.watermark_img = self.watermark_img.transpose(Transpose.ROTATE_90)
+            self.watermark_img = self.watermark_img.transpose(
+                Transpose.ROTATE_90)
         elif self.orientation == "Rotate 180":
-            self.watermark_img = self.watermark_img.transpose(Transpose.ROTATE_180)
+            self.watermark_img = self.watermark_img.transpose(
+                Transpose.ROTATE_180)
         elif self.orientation == "Rotate 270 CW":
-            self.watermark_img = self.watermark_img.transpose(Transpose.ROTATE_270)
+            self.watermark_img = self.watermark_img.transpose(
+                Transpose.ROTATE_270)
         else:
             pass
 
@@ -259,4 +287,5 @@ class ImageContainer(object):
             self.watermark_img.save(target_path, quality=quality, encoding='utf-8',
                                     exif=self.img.info['exif'] if 'exif' in self.img.info else '')
         else:
-            self.watermark_img.save(target_path, quality=quality, encoding='utf-8')
+            self.watermark_img.save(
+                target_path, quality=quality, encoding='utf-8')

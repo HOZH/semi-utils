@@ -62,9 +62,12 @@ def processing():
 
     # 根据布局添加不同的水印处理器
     if config.get_layout_type() in layout_items_dict:
+        
         processor_chain.add(layout_items_dict.get(config.get_layout_type()).processor)
+        pass
     else:
         processor_chain.add(SIMPLE_PROCESSOR)
+        pass
 
     # 如果需要添加白边，且是水印布局，则添加白边处理器，白边处理器优先级最低
     if config.has_white_margin_enabled() and 'watermark' in config.get_layout_type():

@@ -17,6 +17,7 @@ from utils import resize_image_with_width
 from utils import square_image
 from utils import text_to_image
 
+
 printable = set(string.printable)
 
 NORMAL_HEIGHT = 1000
@@ -109,7 +110,7 @@ class WatermarkProcessor(ProcessorComponent):
         # 默认值
         self.logo_position = 'left'
         self.logo_enable = True
-        self.bg_color = '#ffffff'
+        self.bg_color = '#000000'
         self.line_color = GRAY
         self.font_color_lt = '#212121'
         self.bold_font_lt = True
@@ -219,6 +220,9 @@ class WatermarkRightLogoProcessor(WatermarkProcessor):
     def __init__(self, config: Config):
         super().__init__(config)
         self.logo_position = 'right'
+    
+    # def process(self, container: ImageContainer) -> None:
+    #     super().process(container)
 
 
 class WatermarkLeftLogoProcessor(WatermarkProcessor):
@@ -236,16 +240,31 @@ class DarkWatermarkRightLogoProcessor(WatermarkRightLogoProcessor):
 
     def __init__(self, config: Config):
         super().__init__(config)
-        self.bg_color = '#212121'
+        # self.bg_color = '#212121'
+        self.bg_color = '#000000'
         self.line_color = GRAY
         self.font_color_lt = '#D32F2F'
+        # self.font_color_lt = '#000000'
         self.bold_font_lt = True
         self.font_color_lb = '#d4d1cc'
+        # self.font_color_lb = '#000000'
         self.bold_font_lb = False
         self.font_color_rt = '#D32F2F'
+        # self.font_color_rt = '#FF0000'
         self.bold_font_rt = True
         self.font_color_rb = '#d4d1cc'
+        # self.font_color_rb = '#000000'
         self.bold_font_rb = False
+
+    def process(self, container: ImageContainer) -> None:
+        if container.get_height()<container.get_width():
+            super().process(container)
+            # pass
+        # super().process(container)
+        
+        # self.bg_color = '#000000'
+            
+
 
 
 class DarkWatermarkLeftLogoProcessor(WatermarkLeftLogoProcessor):
@@ -290,9 +309,17 @@ class MarginProcessor(ProcessorComponent):
     LAYOUT_ID = 'margin'
 
     def process(self, container: ImageContainer) -> None:
+        self.config.bg_color = '#000000'
         config = self.config
-        padding_size = int(config.get_white_margin_width() * min(container.get_width(), container.get_height()) / 100)
-        padding_img = padding_image(container.get_watermark_img(), padding_size, 'tlr', color=config.bg_color)
+        if container.get_width() > container.get_height():
+            return
+            # pass
+        # padding_size = int(config.get_white_margin_width() * min(container.get_width(), container.get_height()) / 100)
+        local_higher, local_width = container.get_height(),container.get_width()
+        unit_length = local_higher/5
+        padding_size = int(((unit_length*4)-local_width)/2)+1
+
+        padding_img = padding_image(container.get_watermark_img(), padding_size, 'lr', color=config.bg_color)
         container.update_watermark_img(padding_img)
 
 
@@ -346,6 +373,7 @@ class PaddingToOriginalRatioProcessor(ProcessorComponent):
     def process(self, container: ImageContainer) -> None:
         original_ratio = container.get_original_ratio()
         ratio = container.get_ratio()
+        # ratio = 4/5
         if original_ratio > ratio:
             # 如果原始比例大于当前比例，说明宽度大于高度，需要填充高度
             padding_size = int(container.get_width() / original_ratio - container.get_height())

@@ -24,6 +24,9 @@ from entity.menu import *
 from enums.constant import *
 from gen_video import generate_video
 
+from pprint import pprint
+
+
 # 如果 logs 不存在，创建 logs
 Path('./logs').mkdir(parents=True, exist_ok=True)
 
@@ -110,6 +113,7 @@ LAYOUT_ITEMS = [
     LayoutItem.from_processor(PURE_WHITE_MARGIN_PROCESSOR),
 ]
 layout_items_dict = {item.value: item for item in LAYOUT_ITEMS}
+# pprint(layout_items_dict)
 
 for item in LAYOUT_ITEMS:
     item_menu = MenuItem(item.name)

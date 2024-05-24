@@ -32,15 +32,15 @@ layout:
     right_bottom:
       color: '#757575'
       is_bold: false
-      name: Datetime
-      value: Photo by NONE
+      name: Custom
+      value: HOZH
     right_top:
       color: '#212121'
       is_bold: true
       name: Param
-  logo_enable: false
+  logo_enable: true
   logo_position: left
-  type: watermark_right_logo
+  type: dark_watermark_right_logo
 logo:
   default:
     id: ''
@@ -78,7 +78,7 @@ logo:
       path: ./logos/olympus_blue_gold.png
     panasonic:
       id: Panasonic
-      path: ./logos/panasonic.png
+      path: ./logos/lumix_dark.png
     pentax:
       id: PENTAX
       path: ./logos/pentax.png
